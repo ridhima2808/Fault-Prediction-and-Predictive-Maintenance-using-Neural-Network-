@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Industrial Predictive Maintenance Dashboard | AI4I Machine Health</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="light-theme">
+
+    <!-- Header Navigation -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand">
+                <i class="fa-solid fa-microchip brand-icon"></i>
+                <div class="brand-text">
+                    <h1>Predictive Maintenance Console</h1>
+                    <span class="subtext">AI4I Machine Health & Explainable Neural Telemetry</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="reliability-badge" id="reliabilityTrackerBadge">
+                    <i class="fa-solid fa-shield-heart"></i> Model Accuracy (Last 50): <strong id="relAccVal">94.2%</strong>
+                </div>
+                <span class="status-indicator online">
+                    <span class="pulse-dot"></span> Model Active (ROC-AUC: 0.963)
+                </span>
+                <a href="/api/download_walkthrough" class="btn btn-outline btn-sm" style="border-color:#3b82f6; color:#1d4ed8; background-color:#eff6ff;">
+                    <i class="fa-solid fa-file-lines"></i> Download Walkthrough
+                </a>
+                <a href="/api/sample_csv" class="btn btn-outline btn-sm">
+                    <i class="fa-solid fa-download"></i> Sample CSV
+                </a>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="dashboard-main">
+
+        <!-- Navigation Tabs for the 3 Input Modes -->
+        <nav class="mode-nav">
+            <button class="mode-tab active" data-mode="whatif">
+                <i class="fa-solid fa-sliders"></i> What-If Real-Time Simulator
+            </button>
+            <button class="mode-tab" data-mode="manual">
+                <i class="fa-solid fa-pen-to-square"></i> Manual Diagnostic Input
+            </button>
+            <button class="mode-tab" data-mode="batch">
+                <i class="fa-solid fa-file-csv"></i> Batch Fleet Telemetry CSV
+            </button>
+        </nav>
+
+        <!-- GRID LAYOUT FOR WHAT-IF / MANUAL MODES -->
+        <div id="singlePredictSection" class="workspace-grid">
+            
+            <!-- LEFT PANEL: SENSOR INPUT CONTROLS -->
+            <section class="card input-card mode-whatif" id="inputCard">
+                <div class="card-header" id="inputCardHeader">
+                    <h2 id="inputCardTitle"><i class="fa-solid fa-sliders text-primary"></i> <span id="inputCardTitleText">What-If Real-Time Simulator</span></h2>
+                    <span id="liveModeBadge" class="badge badge-info"><i class="fa-solid fa-bolt"></i> Live Syncing</span>
+                </div>
+
+                <!-- Mode Banner Indicator -->
+                <div id="modeDescBanner" class="mode-desc-banner mode-desc-whatif">
+                    <i class="fa-solid fa-sliders"></i> <strong>What-If Simulator Active:</strong> Drag any slider to simulate live sensor telemetry changes in real-time.
+                </div>
+                
+                <form id="sensorForm" class="sensor-form">
+                    
+                    <!-- Machine Type -->
+                    <div class="form-group">
+                        <label for="machineType"><i class="fa-solid fa-gears"></i> Machine Variant / Type</label>
+                        <select id="machineType" name="type" class="form-control">
+                            <option value="L">L - Low Quality / High Volume (60% Fleet)</option>
+                            <option value="M" selected>M - Medium Quality / Standard (30% Fleet)</option>
+                            <option value="H">H - High Quality / Heavy Duty (10% Fleet)</option>
+                        </select>
+                    </div>
+
+                    <!-- Air Temperature -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <label for="airTemp">Air Temperature [K]</label>
+                            <div class="input-val-container">
+                                <input type="number" id="airTempNum" min="295" max="305" step="0.1" value="300.0" class="num-input">
+                                <span class="val-display" id="airTempVal">300.0 K</span>
+                            </div>
+                        </div>
+                        <input type="range" id="airTemp" name="air_temp" min="295" max="305" step="0.1" value="300.0" class="slider">
+                        <div class="range-bounds"><span>295 K</span><span>Nominal: 300 K</span><span>305 K</span></div>
+                    </div>
+
+                    <!-- Process Temperature -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <label for="procTemp">Process Temperature [K]</label>
+                            <div class="input-val-container">
+                                <input type="number" id="procTempNum" min="305" max="315" step="0.1" value="310.0" class="num-input">
+                                <span class="val-display" id="procTempVal">310.0 K</span>
+                            </div>
+                        </div>
+                        <input type="range" id="procTemp" name="proc_temp" min="305" max="315" step="0.1" value="310.0" class="slider">
+                        <div class="range-bounds"><span>305 K</span><span>Nominal: 310 K</span><span>315 K</span></div>
+                    </div>
+
+                    <!-- Rotational Speed -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <label for="rotSpeed">Rotational Speed [rpm]</label>
+                            <div class="input-val-container">
+                                <input type="number" id="rotSpeedNum" min="1100" max="2800" step="10" value="1500" class="num-input">
+                                <span class="val-display" id="rotSpeedVal">1500 rpm</span>
+                            </div>
+                        </div>
+                        <input type="range" id="rotSpeed" name="rot_speed" min="1100" max="2800" step="10" value="1500" class="slider">
+                        <div class="range-bounds"><span>1100 rpm</span><span>Safe: 1200-1800</span><span>2800 rpm</span></div>
+                    </div>
+
+                    <!-- Torque -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <label for="torque">Torque [Nm]</label>
+                            <div class="input-val-container">
+                                <input type="number" id="torqueNum" min="10" max="80" step="0.5" value="40.0" class="num-input">
+                                <span class="val-display" id="torqueVal">40.0 Nm</span>
+                            </div>
+                        </div>
+                        <input type="range" id="torque" name="torque" min="10" max="80" step="0.5" value="40.0" class="slider">
+                        <div class="range-bounds"><span>10 Nm</span><span>Safe: 15-55</span><span>80 Nm</span></div>
+                    </div>
+
+                    <!-- Tool Wear -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <label for="toolWear">Tool Wear [min]</label>
+                            <div class="input-val-container">
+                                <input type="number" id="toolWearNum" min="0" max="260" step="1" value="100" class="num-input">
+                                <span class="val-display" id="toolWearVal">100 min</span>
+                            </div>
+                        </div>
+                        <input type="range" id="toolWear" name="tool_wear" min="0" max="260" step="1" value="100" class="slider">
+                        <div class="range-bounds"><span>0 min</span><span>Limit: 200 min</span><span>260 min</span></div>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="btn btn-manual-submit btn-block">
+                        <i class="fa-solid fa-microchip"></i> Run Diagnostic Prediction
+                    </button>
+                </form>
+            </section>
+
+            <!-- RIGHT PANEL: DIAGNOSTIC DASHBOARD & SHAP -->
+            <section class="dashboard-output">
+                
+                <!-- 3-Tier Action Recommendation Banner -->
+                <div id="actionBanner" class="action-banner banner-green">
+                    <div class="banner-icon">
+                        <i class="fa-solid fa-circle-check" id="bannerIcon"></i>
+                    </div>
+                    <div class="banner-content">
+                        <div class="banner-title" id="bannerTitle">OPTIMAL OPERATIONAL STATUS</div>
+                        <div class="banner-subtitle" id="bannerSubtitle">No action needed - Telemetry parameters are within safety limits.</div>
+                    </div>
+                    <div class="banner-badge" id="bannerBadge">NORMAL</div>
+                </div>
+
+                <!-- KPI Metric Cards -->
+                <div class="kpi-grid">
+                    
+                    <!-- Risk Score Gauge -->
+                    <div class="card kpi-card">
+                        <div class="kpi-title">Failure Risk Score</div>
+                        <div class="gauge-container">
+                            <canvas id="riskGaugeCanvas"></canvas>
+                            <div class="gauge-overlay">
+                                <span class="gauge-val" id="riskVal">3.4%</span>
+                                <span class="gauge-label" id="riskLabel">LOW RISK</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Failure Prediction & Type -->
+                    <div class="card kpi-card">
+                        <div class="kpi-title">Machine Status & Pattern</div>
+                        <div class="status-summary">
+                            <div class="status-pill" id="failurePill">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                <span id="failureText">NO FAILURE</span>
+                            </div>
+                            <div class="type-detail">
+                                <div class="detail-label">Identified Failure Mode:</div>
+                                <div class="detail-val" id="failureTypeVal">No Failure</div>
+                                <div class="confidence-tag">Model Confidence: <strong id="confidenceVal">98.5%</strong></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cost of Inaction Estimate -->
+                    <div class="card kpi-card">
+                        <div class="kpi-title">Cost of Inaction Estimate</div>
+                        <div class="cost-summary">
+                            <div class="cost-metric">
+                                <span class="c-label">Est. Downtime:</span>
+                                <span class="c-val" id="downtimeVal">0 hrs</span>
+                            </div>
+                            <div class="cost-metric">
+                                <span class="c-label">Financial Impact:</span>
+                                <span class="c-val badge-impact" id="impactVal">Low</span>
+                            </div>
+                            <div class="cost-metric">
+                                <span class="c-label">Estimated Repair/Loss:</span>
+                                <span class="c-val" id="costVal">$0 - $500</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plain English Diagnosis & Self-Baseline Flagging -->
+                <div class="card diagnosis-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-stethoscope"></i> Diagnostic Report & Self-Baseline Anomalies</h3>
+                        <button id="downloadTicketBtn" class="btn btn-sm btn-outline">
+                            <i class="fa-solid fa-file-pdf"></i> Export Maintenance Ticket
+                        </button>
+                    </div>
+                    
+                    <!-- Self-Baseline Anomaly Flags -->
+                    <div class="baseline-flags-container" id="baselineFlagsContainer">
+                        <!-- Injected dynamically -->
+                    </div>
+
+                    <div class="diagnosis-body" id="diagnosisText">
+                        Machine telemetry shows a 3.4% failure probability. Primary risk drivers: nominal operational sensor telemetry within standard tolerances. Pattern corresponds to No Failure. Recommended Action: No immediate action needed. Continue standard operational monitoring.
+                    </div>
+                </div>
+
+                <!-- 2-Column Visual Charts: SHAP + Live 24h Risk Forecast -->
+                <div class="visuals-grid">
+                    <!-- SHAP Explainability Panel -->
+                    <div class="card shap-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-chart-column"></i> SHAP Explainability</h3>
+                            <span class="subhead-tag">Feature Risk Impact (+ Risk Up, - Risk Down)</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="shapChartCanvas"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Live Risk Forecast Trend Chart -->
+                    <div class="card forecast-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-chart-line"></i> Live 24h Risk Forecast Trend</h3>
+                            <span class="subhead-tag">Risk Trajectory Over Next 24 Hours</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="forecastChartCanvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+
+            </section>
+        </div>
+
+        <!-- BATCH CSV FLEET WORKSPACE -->
+        <div id="batchPredictSection" class="batch-grid hidden">
+            
+            <div class="card upload-card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-file-csv"></i> Batch CSV Telemetry Ingestion</h2>
+                    <span class="badge badge-info">Fleet Control Room</span>
+                </div>
+                <div class="upload-dropzone" id="dropzone">
+                    <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+                    <h3>Drag & Drop Telemetry CSV here</h3>
+                    <p>Supported columns: Product ID, Type, Air temp, Process temp, Speed, Torque, Tool wear</p>
+                    <input type="file" id="batchFileInput" accept=".csv" class="hidden-file-input">
+                    <button class="btn btn-primary" onclick="document.getElementById('batchFileInput').click()">
+                        <i class="fa-solid fa-folder-open"></i> Choose CSV File
+                    </button>
+                </div>
+            </div>
+
+            <!-- Fleet Summary Cards -->
+            <div class="fleet-summary-grid hidden" id="fleetSummaryGrid">
+                <div class="card fleet-stat">
+                    <div class="f-num" id="totalFleetNum">0</div>
+                    <div class="f-label">Total Machines Analyzed</div>
+                </div>
+                <div class="card fleet-stat stat-red">
+                    <div class="f-num" id="criticalFleetNum">0</div>
+                    <div class="f-label">Critical Risks (Stop & Inspect)</div>
+                </div>
+                <div class="card fleet-stat stat-yellow">
+                    <div class="f-num" id="warningFleetNum">0</div>
+                    <div class="f-label">Moderate Warnings (Schedule)</div>
+                </div>
+                <div class="card fleet-stat stat-green">
+                    <div class="f-num" id="healthyFleetNum">0</div>
+                    <div class="f-label">Healthy / Optimal</div>
+                </div>
+            </div>
+
+            <!-- Fleet Risk Ranking Data Table -->
+            <div class="card table-card hidden" id="fleetTableCard">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-list-check"></i> Fleet Risk Ranking Control View</h3>
+                    <div class="table-actions">
+                        <button id="exportBatchCsvBtn" class="btn btn-sm btn-outline">
+                            <i class="fa-solid fa-file-export"></i> Export Fleet Report
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="fleet-table" id="fleetTable">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Machine ID</th>
+                                <th>Type</th>
+                                <th>Risk Score</th>
+                                <th>Status</th>
+                                <th>Failure Mode</th>
+                                <th>Est. Downtime</th>
+                                <th>Cost Impact</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fleetTableBody">
+                            <!-- Injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

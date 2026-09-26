@@ -1,0 +1,68 @@
+{
+  "feature_names": [
+    "Type_H",
+    "Type_L",
+    "Type_M",
+    "Air temperature [K]",
+    "Process temperature [K]",
+    "Rotational speed [rpm]",
+    "Torque [Nm]",
+    "Tool wear [min]"
+  ],
+  "numeric_feature_names": [
+    "Air temperature [K]",
+    "Process temperature [K]",
+    "Rotational speed [rpm]",
+    "Torque [Nm]",
+    "Tool wear [min]"
+  ],
+  "display_names": [
+    "Air Temp (K)",
+    "Process Temp (K)",
+    "Rotational Speed (rpm)",
+    "Torque (Nm)",
+    "Tool Wear (min)"
+  ],
+  "fail_labels": {
+    "0": "No Failure",
+    "1": "TWF",
+    "2": "HDF",
+    "3": "PWF",
+    "4": "OSF",
+    "5": "RNF"
+  },
+  "n_type_cols": 3,
+  "type_categories": [
+    "H",
+    "L",
+    "M"
+  ],
+  "thresholds": {
+    "air_temp_K": {
+      "min": 295.3,
+      "max": 304.5,
+      "mean": 300.00493
+    },
+    "proc_temp_K": {
+      "min": 305.7,
+      "max": 313.8,
+      "mean": 310.00556
+    },
+    "rot_speed": {
+      "min": 1168.0,
+      "max": 2886.0,
+      "mean": 1538.7761
+    },
+    "torque": {
+      "min": 3.8,
+      "max": 76.6,
+      "mean": 39.986909999999995
+    },
+    "tool_wear": {
+      "min": 0.0,
+      "max": 253.0,
+      "mean": 107.951
+    }
+  },
+  "roc_auc": 0.963
+}
